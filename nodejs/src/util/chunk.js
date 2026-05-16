@@ -1,10 +1,10 @@
 import req from './req.js';
 import CryptoJS from 'crypto-js';
-import {join} from 'path';
+import { join } from 'path';
 import fs from 'fs';
-import {PassThrough} from 'stream';
+import { PassThrough } from 'stream';
 
-export async function testSupport(url, headers) {
+async function testSupport(url, headers) {
     const resp = await req
         .get(url, {
             responseType: 'stream',
@@ -17,7 +17,7 @@ export async function testSupport(url, headers) {
         })
         .catch((err) => {
             console.error(err);
-            return err.response || {status: 500, data: {}};
+            return err.response || { status: 500, data: {} };
         });
     if (resp && resp.status === 206) {
         const isAccept = resp.headers['accept-ranges'] === 'bytes';
@@ -39,6 +39,27 @@ let currentUrlKey = '';
 const cacheRoot = (process.env['NODE_PATH'] || '.') + '/vod_cache';
 const maxCache = 1024 * 1024 * 100;
 
+async function deleteFolder(filePath) {
+    try {
+        if (fs.existsSync(filePath)) {
+            const files = await fs.promises.readdir(filePath);
+            await Promise.all(files.map(async (file) => {
+                const nextFilePath = `${filePath}/${file}`;
+                const stats = await fs.promises.stat(nextFilePath);
+                if (stats.isDirectory()) {
+                    await deleteFolder(nextFilePath);
+                } else {
+                    await fs.promises.unlink(nextFilePath);
+                }
+            }));
+            await fs.promises.rmdir(filePath);
+        }
+    } catch (error) {
+        console.error('Error deleting folder:', error);
+    }
+}
+deleteFolder(cacheRoot)
+
 function delAllCache(keepKey) {
     try {
         fs.readdir(cacheRoot, (_, files) => {
@@ -52,8 +73,7 @@ function delAllCache(keepKey) {
                                 if (subFiles)
                                     for (const subFile of subFiles) {
                                         if (!subFile.endsWith('.p')) {
-                                            fs.rm(join(dir, subFile), {recursive: true}, () => {
-                                            });
+                                            fs.rm(join(dir, subFile), { recursive: true }, () => {});
                                         }
                                     }
                             });
@@ -75,7 +95,6 @@ async function chunkStream(inReq, outResp, url, urlKey, headers, option) {
     if (!urlHeadCache[urlKey]) {
         const [isSupport, urlHeader] = await testSupport(url, headers);
         if (!isSupport || !urlHeader['content-length']) {
-            console.log(`[chunkStream] 获取content-length失败，执行重定向到: ${url}`);
             outResp.redirect(url);
             return;
         }
@@ -84,7 +103,7 @@ async function chunkStream(inReq, outResp, url, urlKey, headers, option) {
     let exist = true;
     await fs.promises.access(join(cacheRoot, urlKey)).catch((_) => (exist = false));
     if (!exist) {
-        await fs.promises.mkdir(join(cacheRoot, urlKey), {recursive: true});
+        await fs.promises.mkdir(join(cacheRoot, urlKey), { recursive: true });
     }
     const contentLength = parseInt(urlHeadCache[urlKey]['content-length']);
     let byteStart = 0;
@@ -100,14 +119,12 @@ async function chunkStream(inReq, outResp, url, urlKey, headers, option) {
         Object.assign(streamHeader, urlHeadCache[urlKey]);
         streamHeader['content-length'] = (byteEnd - byteStart + 1).toString();
         streamHeader['content-range'] = `bytes ${byteStart}-${byteEnd}/${contentLength}`;
-        // console.log('streamHeader:', streamHeader);
         outResp.code(206);
     } else {
         Object.assign(streamHeader, urlHeadCache[urlKey]);
         outResp.code(200);
     }
-    option = option || {chunkSize: 1024 * 256, poolSize: 5, timeout: 1000 * 10};
-    // console.log(`[chunkStream] option: `, option);
+    option = option || { chunkSize: 1024 * 256, poolSize: 5, timeout: 1000 * 10 };
     const chunkSize = option.chunkSize;
     const poolSize = option.poolSize;
     const timeout = option.timeout;
@@ -136,7 +153,7 @@ async function chunkStream(inReq, outResp, url, urlKey, headers, option) {
                     if (!exist) {
                         const start = chunkIdx * chunkSize;
                         const end = Math.min(contentLength - 1, (chunkIdx + 1) * chunkSize - 1);
-                        // console.log('[chunkIdx]:', inReq.id, chunkIdx);
+                        // console.log(inReq.id, chunkIdx);
                         const dlResp = await req.get(url, {
                             responseType: 'stream',
                             timeout: timeout,
@@ -235,8 +252,7 @@ async function chunkStream(inReq, outResp, url, urlKey, headers, option) {
     stream.on('close', async () => {
         Object.keys(dlFiles).forEach((reqKey) => {
             if (reqKey.startsWith(inReq.id)) {
-                fs.rm(dlFiles[reqKey], {recursive: true}, () => {
-                });
+                fs.rm(dlFiles[reqKey], { recursive: true }, () => {});
                 delete dlFiles[reqKey];
             }
         });

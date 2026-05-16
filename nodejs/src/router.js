@@ -1,11 +1,9 @@
 import duoduo from "./spider/video/duoduo.js";
 import baseset from "./spider/video/baseset.js";
 import mogg from "./spider/video/mogg.js";
-import nangua from "./spider/video/nangua.js";
 import leijing from "./spider/video/leijing.js";
 import panta from "./spider/video/panta.js";
 import wogg from "./spider/video/wogg.js";
-import xb6v from "./spider/video/xb6v.js";
 import zhizhen from "./spider/video/zhizhen.js";
 import tgsou from "./spider/video/tgsou.js";
 import tgchannel from "./spider/video/tgchannel.js";
@@ -21,7 +19,7 @@ import {getCache as getCMS} from "./website/cms.js";
 import CMSFactory from "./spider/video/cms.js";
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, nangua, leijing, panta, wogg, xb6v, zhizhen, tgchannel, tgsou, baseset, push];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

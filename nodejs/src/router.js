@@ -50,7 +50,7 @@ import oscarm3u8 from './spider/video/18+/oscarm3u8.js';
 // 在const spiders处添加import js名 from 就行
 
 const getSpiders = async (server) => {
-    const spiders = [subm3u8, baidu, snm3u8, hhm3u8, xlm3u8, lzm3u8, jsm3u8, zy360, wolong, tkm3u8, ikm3u8, heimuer, ukm3u8, jinyingyun, gsm3u8, hw8, hnm3u8, modum3u8, ykm3u8, swm3u8, sbzy3u8, ptzym3u8, fhm3u8, hgm3u8, lbm3u8, didim3u8, jkm3u8, milkym3u8, oscarm3u8, douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push, subm3u8, baidu, snm3u8, hhm3u8, xlm3u8, lzm3u8, jsm3u8, zy360, wolong, tkm3u8, ikm3u8, heimuer, ukm3u8, jinyingyun, gsm3u8, hw8, hnm3u8, modum3u8, ykm3u8, swm3u8, sbzy3u8, ptzym3u8, fhm3u8, hgm3u8, lbm3u8, didim3u8, jkm3u8, milkym3u8, oscarm3u8];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

@@ -17,9 +17,40 @@ import {getCache as getT4} from "./website/t4.js";
 import T4Factory from "./spider/video/t4.js";
 import {getCache as getCMS} from "./website/cms.js";
 import CMSFactory from "./spider/video/cms.js";
+// 新添加
+import subm3u8 from './spider/video/m3u8/subm3u8.js';
+import baidu from './spider/video/m3u8/baidu.js';
+import snm3u8 from './spider/video/m3u8/snm3u8.js';
+import hhm3u8 from './spider/video/m3u8/hhm3u8.js';
+import xlm3u8 from './spider/video/m3u8/xlm3u8.js';
+import lzm3u8 from './spider/video/m3u8/lzm3u8.js';
+import jsm3u8 from './spider/video/m3u8/jsm3u8.js';
+import zy360 from './spider/video/m3u8/zy360.js';
+import wolong from './spider/video/m3u8/wolong.js';
+import tkm3u8 from './spider/video/m3u8/tkm3u8.js';
+import ikm3u8 from './spider/video/m3u8/ikm3u8.js';
+import heimuer from './spider/video/m3u8/heimuer.js';
+import ukm3u8 from './spider/video/m3u8/ukm3u8.js';
+import jinyingyun from './spider/video/m3u8/jinyingyun.js';
+import gsm3u8 from './spider/video/m3u8/gsm3u8.js';
+import hw8 from './spider/video/m3u8/hw8.js';
+import hnm3u8 from './spider/video/m3u8/hnm3u8.js';
+import modum3u from './spider/video/m3u8/modum3u8.js';
+import ykm3u8 from './spider/video/18+/ykm3u8.js';
+import swm3u8 from './spider/video/18+/swm3u8.js';
+import sbzy3u8 from './spider/video/18+/sbzy3u8.js';
+import ptzym3u8 from './spider/video/18+/ptzym3u8.js';
+import fhm3u8 from './spider/video/18+/fhm3u8.js';
+import hgm3u8 from './spider/video/18+/hgm3u8.js';
+import lbm3u8 from './spider/video/18+/lbm3u8.js';
+import didim3u8 from './spider/video/18+/didim3u8.js';
+import jkm3u8 from './spider/video/18+/jkm3u8.js';
+import milkym3u8 from './spider/video/18+/milkym3u8.js';
+import oscarm3u8 from './spider/video/18+/oscarm3u8.js';
+// 在const spiders处添加import js名 from 就行
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push];
+    const spiders = [subm3u8, baidu, snm3u8, hhm3u8, xlm3u8, lzm3u8, jsm3u8, zy360, wolong, tkm3u8, ikm3u8, heimuer, ukm3u8, jinyingyun, gsm3u8, hw8, hnm3u8, modum3u8, ykm3u8, swm3u8, sbzy3u8, ptzym3u8, fhm3u8, hgm3u8, lbm3u8, didim3u8, jkm3u8, milkym3u8, oscarm3u8, douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

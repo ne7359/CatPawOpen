@@ -1,10 +1,7 @@
 import dayjs from 'dayjs';
 import CryptoJS from 'crypto-js';
-import { IOS_UA, findBestLCS, delay} from './misc.js';
+import { IOS_UA } from './misc.js';
 import req from './req.js';
-import * as HLS from 'hls-parser';
-import {videosHandle} from "./utils.js";
-import {isAliLink} from "./linkDetect.js";
 
 // https://www.alipan.com/s/8stgXuDFsLy
 export function getShareData(url) {
@@ -22,35 +19,116 @@ export function getShareData(url) {
 const apiUrl = 'https://api.aliyundrive.com';
 const openApiUrl = 'https://open.aliyundrive.com/adrive/v1.0';
 
+let config = null;
 const shareTokenCache = {};
 let user = {};
 let oauth = {};
+let oriCfg = {};
 let localDb = null;
-const localTokenPath = '/ali';
+const localTokenPath = '/alipan/tokens';
 const saveDirName = 'CatVodOpen';
 let saveDirId = null;
-let tokenKey = ''
-let token280Key = ''
-let token = ''
-let token280 = ''
 
 const baseHeaders = {
     'User-Agent': IOS_UA,
     Referer: 'https://www.aliyundrive.com/',
 };
 
-export async function initAli(inReq) {
-    localDb = inReq.server.db;
-    const cfg = inReq.server.config.ali;
-    tokenKey = CryptoJS.enc.Hex.stringify(CryptoJS.MD5(cfg.token)).toString();
-    token280Key = CryptoJS.enc.Hex.stringify(CryptoJS.MD5(cfg.token280)).toString();
-    const localCfg = await localDb.getObjectDefault(localTokenPath, {});
-    if (localCfg[tokenKey]) {
-        token = localCfg[tokenKey];
+export async function initAli(db, cfg) {
+    if (config) return;
+    localDb = db;
+    oriCfg = cfg;
+    config = cfg;
+    const localCfg = await db.getObjectDefault(localTokenPath, {});
+    if (localCfg[oriCfg.token]) {
+        config.token = localCfg[oriCfg.token];
     }
-    if (localCfg[token280Key]) {
-        token280 = localCfg[token280Key];
+    if (localCfg[oriCfg.token280]) {
+        config.token280 = localCfg[oriCfg.token280];
     }
+}
+
+/**
+ * 字符串相似度匹配
+ * @returns
+ */
+function lcs(str1, str2) {
+    if (!str1 || !str2) {
+        return {
+            length: 0,
+            sequence: '',
+            offset: 0,
+        };
+    }
+
+    var sequence = '';
+    var str1Length = str1.length;
+    var str2Length = str2.length;
+    var num = new Array(str1Length);
+    var maxlen = 0;
+    var lastSubsBegin = 0;
+
+    for (var i = 0; i < str1Length; i++) {
+        var subArray = new Array(str2Length);
+        for (var j = 0; j < str2Length; j++) {
+            subArray[j] = 0;
+        }
+        num[i] = subArray;
+    }
+    var thisSubsBegin = null;
+    for (i = 0; i < str1Length; i++) {
+        for (j = 0; j < str2Length; j++) {
+            if (str1[i] !== str2[j]) {
+                num[i][j] = 0;
+            } else {
+                if (i === 0 || j === 0) {
+                    num[i][j] = 1;
+                } else {
+                    num[i][j] = 1 + num[i - 1][j - 1];
+                }
+
+                if (num[i][j] > maxlen) {
+                    maxlen = num[i][j];
+                    thisSubsBegin = i - num[i][j] + 1;
+                    if (lastSubsBegin === thisSubsBegin) {
+                        // if the current LCS is the same as the last time this block ran
+                        sequence += str1[i];
+                    } else {
+                        // this block resets the string builder if a different LCS is found
+                        lastSubsBegin = thisSubsBegin;
+                        sequence = ''; // clear it
+                        sequence += str1.substr(lastSubsBegin, i + 1 - lastSubsBegin);
+                    }
+                }
+            }
+        }
+    }
+    return {
+        length: maxlen,
+        sequence: sequence,
+        offset: thisSubsBegin,
+    };
+}
+
+function findBestLCS(mainItem, targetItems) {
+    const results = [];
+    let bestMatchIndex = 0;
+
+    for (let i = 0; i < targetItems.length; i++) {
+        const currentLCS = lcs(mainItem.name, targetItems[i].name);
+        results.push({ target: targetItems[i], lcs: currentLCS });
+        if (currentLCS.length > results[bestMatchIndex].lcs.length) {
+            bestMatchIndex = i;
+        }
+    }
+
+    const bestMatch = results[bestMatchIndex];
+
+    return { allLCS: results, bestMatch: bestMatch, bestMatchIndex: bestMatchIndex };
+}
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function api(url, data, headers, retry) {
@@ -106,10 +184,10 @@ async function login() {
             .post(
                 'https://auth.aliyundrive.com/v2/account/token',
                 {
-                    refresh_token: token,
+                    refresh_token: config.token,
                     grant_type: 'refresh_token',
                 },
-                { headers: baseHeaders }
+                { headers: baseHeaders },
             )
             .catch((err) => {
                 return err.response || { status: 500, data: {} };
@@ -118,38 +196,35 @@ async function login() {
             user = loginResp.data;
             user.expire_time = dayjs(loginResp.data.expire_time).unix();
             user.auth = `${user.token_type} ${user.access_token}`;
-            token = user.refresh_token;
-            await localDb.push(localTokenPath + '/' + tokenKey, user.refresh_token);
+            config.token = user.refresh_token;
+            await localDb.push(localTokenPath + '/' + oriCfg.token, user.refresh_token);
         }
     }
 }
 
-// 兼容alist280, webdav280处理
 async function openAuth() {
     if (!oauth.access_token || oauth.expire_time - dayjs().unix() < 120) {
-        let openResp = await req.post('https://aliyundrive-oauth.messense.me/oauth/access_token',{
-            grant_type: 'refresh_token',
-            refresh_token: token280,
-        }, {
-            headers: baseHeaders,
-        },).catch((err) => {return err.response || { status: 500, data: {} };});
-
-        if (openResp.status != 200) {
-            openResp = await req.post('https://api.nn.ci/alist/ali_open/token',{
-                grant_type: 'refresh_token',
-                refresh_token: token280,
-            }, {
-                headers: baseHeaders,
-            },).catch((err) => {return err.response || { status: 500, data: {} };});
-        }
-
+        let openResp = await req
+            .post(
+                'https://aliyundrive-oauth.messense.me/oauth/access_token',
+                {
+                    grant_type: 'refresh_token',
+                    refresh_token: config.token280,
+                },
+                {
+                    headers: baseHeaders,
+                },
+            )
+            .catch((err) => {
+                return err.response || { status: 500, data: {} };
+            });
         if (openResp.status == 200) {
             oauth = openResp.data;
             const info = JSON.parse(CryptoJS.enc.Base64.parse(openResp.data.access_token.split('.')[1]).toString(CryptoJS.enc.Utf8));
             oauth.expire_time = info.exp;
             oauth.auth = `${oauth.token_type} ${oauth.access_token}`;
-            token280 = oauth.refresh_token;
-            await localDb.push(localTokenPath + '/' + token280Key, oauth.refresh_token);
+            config.token280 = oauth.refresh_token;
+            await localDb.push(localTokenPath + '/' + oriCfg.token280, oauth.refresh_token);
         }
     }
 }
@@ -253,18 +328,11 @@ export async function getFilesByShareUrl(shareInfo) {
             },
             {
                 'X-Share-Token': shareTokenCache[shareId].share_token,
-            }
+            },
         );
 
         const items = listData.items;
         if (!items) return [];
-
-        if (listData.next_marker) {
-            const nextItems = await listFile(shareId, folderId, listData.next_marker);
-            for (const item of nextItems) {
-                items.push(item);
-            }
-        }
 
         const subDir = [];
 
@@ -277,6 +345,13 @@ export async function getFilesByShareUrl(shareInfo) {
                 videos.push(item);
             } else if (item.type === 'file' && subtitleExts.some((x) => item.file_extension.endsWith(x))) {
                 subtitles.push(item);
+            }
+        }
+
+        if (listData.next_marker) {
+            const nextItems = await listFile(shareId, folderId, listData.next_marker);
+            for (const item of nextItems) {
+                items.push(item);
             }
         }
 
@@ -331,7 +406,7 @@ async function save(shareId, fileId, clean) {
         },
         {
             'X-Share-Token': shareTokenCache[shareId].share_token,
-        }
+        },
     );
     if (saveResult.file_id) return saveResult.file_id;
     return false;
@@ -349,15 +424,15 @@ export async function getLiveTranscoding(shareId, fileId) {
         category: 'live_transcoding',
         url_expire_sec: '14400',
     });
-    /*if (transcoding.video_preview_play_info && transcoding.video_preview_play_info.live_transcoding_task_list) {
-        return transcoding.video_preview_play_info.live_transcoding_task_list;*/
-    const playInfo = transcoding?.video_preview_play_info;
-    return playInfo?.quick_video_list ?? playInfo?.live_transcoding_task_list;
+    if (transcoding.video_preview_play_info && transcoding.video_preview_play_info.live_transcoding_task_list) {
+        return transcoding.video_preview_play_info.live_transcoding_task_list;
+    }
+    return null;
 }
 
-export async function getDownload(shareId, fileId) {
+export async function getDownload(shareId, fileId, clean) {
     if (!saveFileIdCaches[fileId]) {
-        const saveFileId = await save(shareId, fileId, true);
+        const saveFileId = await save(shareId, fileId, clean);
         if (!saveFileId) return null;
         saveFileIdCaches[fileId] = saveFileId;
     }
@@ -370,143 +445,3 @@ export async function getDownload(shareId, fileId) {
     }
     return null;
 }
-
-export async function detail(shareUrl) {
-    if (isAliLink(shareUrl)) {
-        const shareData = getShareData(shareUrl);
-        if (shareData) {
-            let videos = await getFilesByShareUrl(shareData);
-            videos = videos.map(v => {
-                const ids = [v.share_id, v.file_id, v.subtitle ? v.subtitle.file_id : ''];
-                return {
-                    vod_id: ids.join('*'),
-                    vod_name: v.name,
-                    vod_size: v.size,
-                }
-            })
-            return videosHandle(getPanName('ali') + '-' + shareData.shareId, videos)
-        } else {
-            return {}
-        }
-    }
-}
-
-const aliTranscodingCache = {};
-const aliDownloadingCache = {};
-
-export async function proxy(inReq, outResp) {
-    await initAli(inReq)
-    const site = inReq.params.site;
-    const what = inReq.params.what;
-    const shareId = inReq.params.shareId;
-    const fileId = inReq.params.fileId;
-    if (site == 'ali') {
-        let downUrl = '';
-        const flag = inReq.params.flag;
-        const end = inReq.params.end;
-        if (what == 'trans') {
-            if (aliTranscodingCache[fileId]) {
-                const purl = aliTranscodingCache[fileId].filter((t) => t.template_id.toLowerCase() == flag)[0].url;
-                if (parseInt(purl.match(/x-oss-expires=(\d+)/)[1]) - dayjs().unix() < 15) {
-                    delete aliTranscodingCache[fileId];
-                }
-            }
-
-            if (aliTranscodingCache[fileId] && end.endsWith('.ts')) {
-                const transcoding = aliTranscodingCache[fileId].filter((t) => t.template_id.toLowerCase() == flag)[0];
-                if (transcoding.plist) {
-                    const tsurl = transcoding.plist.segments[parseInt(end.replace('.ts', ''))].suri;
-                    if (parseInt(tsurl.match(/x-oss-expires=(\d+)/)[1]) - dayjs().unix() < 15) {
-                        delete aliTranscodingCache[fileId];
-                    }
-                }
-            }
-
-            if (!aliTranscodingCache[fileId]) {
-                const transcoding = await getLiveTranscoding(shareId, fileId);
-                aliTranscodingCache[fileId] = transcoding;
-            }
-
-            const transcoding = aliTranscodingCache[fileId].filter((t) => t.template_id.toLowerCase() == flag)[0];
-            if (!transcoding.plist) {
-                const resp = await req.get(transcoding.url, {
-                    headers: {
-                        'User-Agent': IOS_UA,
-                    },
-                });
-                transcoding.plist = HLS.parse(resp.data);
-                for (const s of transcoding.plist.segments) {
-                    if (!s.uri.startsWith('http')) {
-                        s.uri = new URL(s.uri, transcoding.url).toString();
-                    }
-                    s.suri = s.uri;
-                    s.uri = s.mediaSequenceNumber.toString() + '.ts';
-                }
-            }
-
-            if (end.endsWith('.ts')) {
-                outResp.redirect(transcoding.plist.segments[parseInt(end.replace('.ts', ''))].suri);
-                return;
-            } else {
-                const hls = HLS.stringify(transcoding.plist);
-                let hlsHeaders = {
-                    'content-type': 'audio/x-mpegurl',
-                    'content-length': hls.length.toString(),
-                };
-                outResp.code(200).headers(hlsHeaders);
-                return hls;
-            }
-        } else {
-            if (aliDownloadingCache[fileId]) {
-                const purl = aliDownloadingCache[fileId].url;
-                if (parseInt(purl.match(/x-oss-expires=(\d+)/)[1]) - dayjs().unix() < 15) {
-                    delete aliDownloadingCache[fileId];
-                }
-            }
-            if (!aliDownloadingCache[fileId]) {
-                const down = await getDownload(shareId, fileId);
-                aliDownloadingCache[fileId] = down;
-            }
-            downUrl = aliDownloadingCache[fileId].url;
-            if (flag == 'redirect') {
-                outResp.redirect(downUrl);
-                return;
-            }
-        }
-    }
-}
-
-export async function play(inReq, outResp) {
-    await initAli(inReq)
-    const flag = inReq.body.flag;
-    const id = inReq.body.id;
-    const ids = id.split('*');
-    let idx = 0;
-    if (flag.startsWith(getPanName('ali'))) {
-        const transcoding = await getLiveTranscoding(ids[0], ids[1]);
-        aliTranscodingCache[ids[1]] = transcoding;
-        transcoding.sort((a, b) => b.template_width - a.template_width);
-        const p= ['超清','高清','标清','普画','极速'];
-        const arr =['QHD','FHD','HD','SD','LD'];
-        const urls = [];
-        const proxyUrl = inReq.server.address().url + inReq.server.prefix + '/proxy/ali';
-        urls.push('原画');
-        urls.push(`${proxyUrl}/src/redirect/${ids[0]}/${ids[1]}/.bin`);
-        const result = {
-            parse: 0,
-            url: urls,
-        };
-        if (ids[2]) {
-            result.extra = {
-                subt: `${proxyUrl}/src/subt/${ids[0]}/${ids[2]}/.bin`,
-            };
-        }
-        transcoding.forEach((t) => {
-            idx = arr.indexOf(t.template_id);
-            urls.push(p[idx]);
-            urls.push(`${proxyUrl}/trans/${t.template_id.toLowerCase()}/${ids[0]}/${ids[1]}/.m3u8`);
-        });
-        return result;
-    }
-}
-

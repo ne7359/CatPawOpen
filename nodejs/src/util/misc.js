@@ -60,11 +60,11 @@ export function formatPlayUrl(src, name) {
         return name;
     }
     return name
-        .trim()
-        .replaceAll(src, '')
-        .replace(/<|>|《|》/g, '')
-        .replace(/\$|#/g, ' ')
-        .trim();
+      .trim()
+      .replaceAll(src, '')
+      .replace(/<|>|《|》/g, '')
+      .replace(/\$|#/g, ' ')
+      .trim();
 }
 
 export function formatPlayUrl2(src, name) {
@@ -77,9 +77,9 @@ export function formatPlayUrl2(src, name) {
 
 export function stripHtmlTag(src) {
     return src
-        .replace(/<\/?[^>]+(>|$)/g, '')
-        .replace(/&.{1,5};/g, '')
-        .replace(/\s{2,}/g, ' ');
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      .replace(/&.{1,5};/g, '')
+      .replace(/\s{2,}/g, ' ');
 }
 
 export function fixUrl(base, src) {
@@ -127,3 +127,110 @@ export function jsonParse(input, json) {
     }
     return {};
 }
+
+export function conversion(bytes){
+    let mb = bytes / (1024 * 1024);
+    if(mb > 1024){
+        return `${(mb/1024).toFixed(2)}GB`;
+    }else{
+        return `${parseInt(mb).toFixed(0)}MB`;
+    }
+}
+
+
+export function isEmpty(value) {
+    if (value === null || value === undefined) {
+        return true;
+    } else if (typeof value === 'string') {
+        return value.length === 0;
+    } else if (Array.isArray(value)) {
+        return value.length === 0;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * 字符串相似度匹配
+ * @returns
+ */
+export function lcs(str1, str2) {
+    if (!str1 || !str2) {
+        return {
+            length: 0,
+            sequence: '',
+            offset: 0,
+        };
+    }
+
+    var sequence = '';
+    var str1Length = str1.length;
+    var str2Length = str2.length;
+    var num = new Array(str1Length);
+    var maxlen = 0;
+    var lastSubsBegin = 0;
+
+    for (var i = 0; i < str1Length; i++) {
+        var subArray = new Array(str2Length);
+        for (var j = 0; j < str2Length; j++) {
+            subArray[j] = 0;
+        }
+        num[i] = subArray;
+    }
+    var thisSubsBegin = null;
+    for (i = 0; i < str1Length; i++) {
+        for (j = 0; j < str2Length; j++) {
+            if (str1[i] !== str2[j]) {
+                num[i][j] = 0;
+            } else {
+                if (i === 0 || j === 0) {
+                    num[i][j] = 1;
+                } else {
+                    num[i][j] = 1 + num[i - 1][j - 1];
+                }
+
+                if (num[i][j] > maxlen) {
+                    maxlen = num[i][j];
+                    thisSubsBegin = i - num[i][j] + 1;
+                    if (lastSubsBegin === thisSubsBegin) {
+                        // if the current LCS is the same as the last time this block ran
+                        sequence += str1[i];
+                    } else {
+                        // this block resets the string builder if a different LCS is found
+                        lastSubsBegin = thisSubsBegin;
+                        sequence = ''; // clear it
+                        sequence += str1.substr(lastSubsBegin, i + 1 - lastSubsBegin);
+                    }
+                }
+            }
+        }
+    }
+    return {
+        length: maxlen,
+        sequence: sequence,
+        offset: thisSubsBegin,
+    };
+}
+
+export function findBestLCS(mainItem, targetItems) {
+    const results = [];
+    let bestMatchIndex = 0;
+
+    for (let i = 0; i < targetItems.length; i++) {
+        const currentLCS = lcs(mainItem.name, targetItems[i].name);
+        results.push({ target: targetItems[i], lcs: currentLCS });
+        if (currentLCS.length > results[bestMatchIndex].lcs.length) {
+            bestMatchIndex = i;
+        }
+    }
+
+    const bestMatch = results[bestMatchIndex];
+
+    return { allLCS: results, bestMatch: bestMatch, bestMatchIndex: bestMatchIndex };
+}
+
+export function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export const getCookieArray = (cookies) => cookies.map(cookie => cookie.split(";")[0] + ";")

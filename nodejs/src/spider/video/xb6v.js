@@ -1,7 +1,8 @@
 // 磁力 新6V
 import req from '../../util/req.js';
 import { load } from 'cheerio';
-import _ from 'lodash';
+import { ua, init as _init ,detail as _detail ,proxy ,play } from '../../util/pan.js';
+import {firstSuccessfulUrl} from "../../util/utils.js";
 
 const siteUrl = "https://www.xb6v.com";
 

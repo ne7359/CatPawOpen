@@ -34,7 +34,7 @@ import xlm3u8 from "./spider/video/m3u8/xlm3u8.js";
 import zy360 from "./spider/video/m3u8/zy360.js";
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, baidu, gsm3u8, hhm3u8, hnm3u8, ikm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, push];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baidu, gsm3u8, hhm3u8, hnm3u8, ikm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, push, baseset];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

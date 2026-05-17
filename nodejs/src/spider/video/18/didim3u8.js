@@ -2,7 +2,7 @@
 import * as HLS from 'hls-parser';
 import req from '../../../util/req.js';
 
-let url = 'https://api.ddapi.cc/api.php/provide/vod/?ac=list';
+let url = 'https://api.ddapi.cc/api.php/provide/vod/';
 let categories = ['国产专区','国产厂商','主播视讯','日本无码','日本有码','中文字幕','中字无码','中字有码','水果派解说','麻豆传媒','91制片厂','蜜桃影像传媒','天美传媒','精东影业','星空无限传媒','台湾swag','其他传媒','三级伦理','女写真','卡通动漫','采集教程','葫芦影业','糖心Vlog','欧美性爱','SM调教','女同系列','男同系列'];
 
 async function request(reqUrl) {

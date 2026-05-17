@@ -21,9 +21,20 @@ import CMSFactory from "./spider/video/cms.js";/**
 */
 import baidu from "./spider/video/m3u8/baidu.js";
 import gsm3u8 from "./spider/video/m3u8/gsm3u8.js";
+import hhm3u8 from "./spider/video/m3u8/hhm3u8.js";
+import hnm3u8 from "./spider/video/m3u8/hnm3u8.js";
+import ikm3u8 from "./spider/video/m3u8/ikm3u8.js";
+import jinyingyun from "./spider/video/m3u8/jinyingyun.js";
+import jsm3u8 from "./spider/video/m3u8/jsm3u8.js";
+import lzm3u8 from "./spider/video/m3u8/lzm3u8.js";
+import snm3u8 from "./spider/video/m3u8/snm3u8.js";
+import subm3u8 from "./spider/video/m3u8/subm3u8.js";
+import ukm3u8 from "./spider/video/m3u8/ukm3u8.js";
+import xlm3u8 from "./spider/video/m3u8/xlm3u8.js";
+import zy360 from "./spider/video/m3u8/zy360.js";
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push, baidu, gsm3u8];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, baidu, gsm3u8, hhm3u8, hnm3u8, ikm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, push];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

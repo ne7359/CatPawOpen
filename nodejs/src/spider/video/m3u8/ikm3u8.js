@@ -2,7 +2,7 @@
 import * as HLS from 'hls-parser';
 import req from '../../../util/req.js';
 
-let url = 'https://www.ikunzy.com/api.php/provide/vod/';
+let url = 'https://ikunzyapi.com/api.php/seaxml/vod/at/xml';
 let categories = ["国产剧", "动作片", "喜剧片", "爱情片", "科幻片", "恐怖片", "剧情片", "战争片", "惊悚片", "家庭片", "古装片", "历史片", "悬疑片", "犯罪片", "灾难片", "记录片", "短片", "动画片", "香港剧", "韩国剧", "欧美剧", "台湾剧", "日本剧", "海外剧", "泰国剧", "大陆综艺", "港台综艺", "日韩综艺", "欧美综艺", "国产动漫", "欧美动漫", "日本动漫", "爽文短剧", "伦理片", "里番动漫"];
 
 async function request(reqUrl) {

@@ -18,6 +18,7 @@ import T4Factory from "./spider/video/t4.js";
 import {getCache as getCMS} from "./website/cms.js";
 import CMSFactory from "./spider/video/cms.js";
 import spider from "./spider/spider.js";
+import alist from "./spider/pan/alist.js";
 /*
 * 新添加
 */
@@ -42,7 +43,7 @@ import milkym3u8 from "./spider/video/18/milkym3u8.js";
 import sbzy3u8 from "./spider/video/18/sbzy3u8.js";
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baidu, gsm3u8, hhm3u8, hnm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, didim3u8, fhm3u8, forestm3u8, jkm3u8, lbm3u8, milkym3u8, sbzy3u8, push, spider, baseset];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baidu, gsm3u8, hhm3u8, hnm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, didim3u8, fhm3u8, forestm3u8, jkm3u8, lbm3u8, milkym3u8, sbzy3u8, push, spider, alist, baseset];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

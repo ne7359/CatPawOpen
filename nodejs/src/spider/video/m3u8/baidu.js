@@ -2,7 +2,7 @@
 import * as HLS from 'hls-parser';
 import req from '../../../util/req.js';
 
-let url = 'https://api.apibdzy.com/api.php/provide/vod/from/dbm3u8/';
+let url = 'https://api.apibdzy.com/api.php/provide/vod/';
 let categories = ["动作片", "喜剧片", "爱情片", "科幻片", "恐怖片", "剧情片", "战争片", "国产剧", "欧美剧", "韩剧", "日剧", "港剧", "台剧", "泰剧", "海外剧", "纪录片", "大陆综艺", "日韩综艺", "港台综艺", "欧美综艺", "国产动漫", "日韩动漫", "欧美动漫", "动画片", "港台动漫", "海外动漫", "悬疑片", "预告片"];
 
 async function request(reqUrl) {

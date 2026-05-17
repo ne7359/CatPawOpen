@@ -2,7 +2,7 @@
 import * as HLS from 'hls-parser';
 import req from '../../../util/req.js';
 
-let url = 'https://slapibf.com/api.php/provide/vod/?ac=list';
+let url = 'https://slapibf.com/api.php/provide/vod/';
 let categories = ['校园情事', '人妻纵情', '另类小说', '长篇连载', '网友自拍', '丝袜美腿', '卡通漫画', '欧美风情'];
 
 async function request(reqUrl) {

@@ -16,10 +16,14 @@ import { extractTitle, findEpisodeNumber } from './util/danmu-utils.js';
 import {getCache as getT4} from "./website/t4.js";
 import T4Factory from "./spider/video/t4.js";
 import {getCache as getCMS} from "./website/cms.js";
-import CMSFactory from "./spider/video/cms.js";
+import CMSFactory from "./spider/video/cms.js";/**
+* 新添加
+*/
+import baidu from "./spider/video/m3u8/baidu.js";
+import gsm3u8 from "./spider/video/m3u8/gsm3u8.js";
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baseset, push, baidu, gsm3u8];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

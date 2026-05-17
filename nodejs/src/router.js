@@ -38,11 +38,10 @@ import forestm3u8 from "./spider/video/18/forestm3u8.js";
 import jkm3u8 from "./spider/video/18/jkm3u8.js";
 import lbm3u8 from "./spider/video/18/lbm3u8.js";
 import milkym3u8 from "./spider/video/18/milkym3u8.js";
-import oscarm3u8 from "./spider/video/18/oscarm3u8.js";
 import sbzy3u8 from "./spider/video/18/sbzy3u8.js";
 
 const getSpiders = async (server) => {
-    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baidu, gsm3u8, hhm3u8, hnm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, didim3u8, fhm3u8, forestm3u8, jkm3u8, lbm3u8, milkym3u8, oscarm3u8, sbzy3u8, push, baseset];
+    const spiders = [douban, duoduo, mogg, leijing, panta, wogg, zhizhen, tgchannel, tgsou, baidu, gsm3u8, hhm3u8, hnm3u8, jinyingyun, jsm3u8, lzm3u8, snm3u8, ukm3u8, xlm3u8, zy360, didim3u8, fhm3u8, forestm3u8, jkm3u8, lbm3u8, milkym3u8, sbzy3u8, push, baseset];
     const t4Data = await getT4(server)
     t4Data.forEach(item => {
         spiders.push(T4Factory(item.name, item.address))

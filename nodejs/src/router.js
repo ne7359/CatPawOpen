@@ -22,7 +22,6 @@ import alist from "./spider/pan/alist.js";
 /*
 * 新添加
 */
-import baidu from "./spider/video/m3u8/baidu.js";
 import gsm3u8 from "./spider/video/m3u8/gsm3u8.js";
 import hhm3u8 from "./spider/video/m3u8/hhm3u8.js";
 import hnm3u8 from "./spider/video/m3u8/hnm3u8.js";

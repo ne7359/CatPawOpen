@@ -17,7 +17,7 @@ import {getCache as getT4} from "./website/t4.js";
 import T4Factory from "./spider/video/t4.js";
 import {getCache as getCMS} from "./website/cms.js";
 import CMSFactory from "./spider/video/cms.js";
-import spider from "./spider/spider.js";
+import Spider from "./spider/spider.js";
 import alist from "./spider/pan/alist.js";
 /*
 * 新添加
